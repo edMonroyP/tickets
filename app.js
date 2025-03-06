@@ -1,7 +1,7 @@
 /* app.js */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } 
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithRedirect, GoogleAuthProvider, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } 
 from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, updateDoc, doc, deleteDoc } 
 from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
@@ -22,6 +22,15 @@ const auth = getAuth();
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
+// Configurar persistencia de sesión
+setPersistence(auth, browserLocalPersistence)
+    .then(() => {
+        console.log("Persistencia configurada en local.");
+    })
+    .catch((error) => {
+        console.error("Error en persistencia:", error);
+    });
+
 // Eventos de autenticación
 document.addEventListener("DOMContentLoaded", () => {
     const btnLogin = document.getElementById("btnLogin");
@@ -35,10 +44,14 @@ document.addEventListener("DOMContentLoaded", () => {
         btnLogin.addEventListener("click", async () => {
             const email = document.getElementById("email").value;
             const password = document.getElementById("password").value;
+    
             try {
-                await signInWithEmailAndPassword(auth, email, password);
+                await setPersistence(auth, browserSessionPersistence);
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                console.log("Usuario autenticado:", userCredential.user);
                 window.location.href = "dashboard.html";
             } catch (error) {
+                console.error("Error al iniciar sesión:", error);
                 alert("Error al iniciar sesión: " + error.message);
             }
         });
@@ -78,16 +91,10 @@ document.addEventListener("DOMContentLoaded", () => {
         btnGoogle.addEventListener("click", async () => {
             try {
                 const result = await signInWithPopup(auth, provider);
-                const user = result.user;
-                await addDoc(collection(db, "users"), {
-                    uid: user.uid,
-                    email: user.email,
-                    nombre: user.displayName || "",
-                    fotoPerfil: user.photoURL || "",
-                    fechaRegistro: serverTimestamp()
-                });
+                console.log("Usuario autenticado con Google:", result.user);
                 window.location.href = "dashboard.html";
             } catch (error) {
+                console.error("Error al iniciar sesión con Google:", error);
                 alert("Error al iniciar sesión con Google: " + error.message);
             }
         });
@@ -169,6 +176,24 @@ document.addEventListener("DOMContentLoaded", () => {
                         </td>
                     </tr>`;
             });
+            setTimeout(async () => {
+                try {
+                    await addDoc(collection(db, "tickets"), {
+                        titulo,
+                        descripcion,
+                        prioridad,
+                        estado: "abierto",
+                        usuario: user.uid,
+                        fechaCreacion: serverTimestamp()
+                    });
+
+                    alert("¡Ticket creado exitosamente!");
+                    window.location.href = "tickets.html";
+                } catch (error) {
+                    console.error("Error al guardar en Firestore:", error);
+                    alert("Error al crear ticket: " + error.message);
+                }
+            }, 500);
         });
     }
 });
