@@ -3,7 +3,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } 
 from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, updateDoc, doc, deleteDoc, getDocs } 
+import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, updateDoc, doc, deleteDoc } 
 from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 // Configuración de Firebase
@@ -138,10 +138,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ticketList) {
         onSnapshot(collection(db, "tickets"), (snapshot) => {
             ticketList.innerHTML = "";
-            if (snapshot.empty) {
-                ticketList.innerHTML = "<tr><td colspan='4' class='text-center'>No hay tickets disponibles</td></tr>";
-                return;
-            }
             snapshot.forEach((doc) => {
                 const ticket = doc.data();
                 ticketList.innerHTML += `
@@ -159,3 +155,21 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
+window.actualizarEstado = async (id, estado) => {
+    try {
+        await updateDoc(doc(db, "tickets", id), { estado });
+        alert("Estado actualizado a " + estado);
+    } catch (error) {
+        alert("Error al actualizar estado: " + error.message);
+    }
+};
+
+window.eliminarTicket = async (id) => {
+    try {
+        await deleteDoc(doc(db, "tickets", id));
+        alert("Ticket eliminado exitosamente.");
+    } catch (error) {
+        alert("Error al eliminar ticket: " + error.message);
+    }
+};
