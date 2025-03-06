@@ -3,7 +3,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } 
 from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, updateDoc, doc, deleteDoc } 
+import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, updateDoc, doc, deleteDoc, getDocs } 
 from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 // Configuración de Firebase
@@ -28,6 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnRegister = document.getElementById("btnRegister");
     const btnGoogle = document.getElementById("btnGoogle");
     const btnLogout = document.getElementById("btnLogout");
+    const btnCrearTicket = document.getElementById("btnCrearTicket");
 
     if (btnLogin) {
         btnLogin.addEventListener("click", async () => {
@@ -44,8 +45,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (btnRegister) {
         btnRegister.addEventListener("click", async () => {
-            const email = document.getElementById("email").value;
+            const email = document.getElementById("email").value.trim();
             const password = document.getElementById("password").value;
+            
+            if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                alert("Por favor, ingresa un correo válido.");
+                return;
+            }
+
+            if (password.length < 6) {
+                alert("La contraseña debe tener al menos 6 caracteres.");
+                return;
+            }
+            
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
@@ -87,14 +99,49 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
     }
-});
 
-// Listar tickets
-document.addEventListener("DOMContentLoaded", () => {
-    if (document.getElementById("ticketList")) {
+    if (btnCrearTicket) {
+        btnCrearTicket.addEventListener("click", async () => {
+            const titulo = document.getElementById("titulo").value.trim();
+            const descripcion = document.getElementById("descripcion").value.trim();
+            const prioridad = document.getElementById("prioridad").value;
+            const user = auth.currentUser;
+
+            if (!user) {
+                alert("Debes iniciar sesión para crear un ticket.");
+                return;
+            }
+
+            if (titulo === "" || descripcion === "") {
+                alert("Por favor, completa todos los campos.");
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "tickets"), {
+                    titulo,
+                    descripcion,
+                    prioridad,
+                    estado: "abierto",
+                    usuario: user.uid,
+                    fechaCreacion: serverTimestamp()
+                });
+                alert("¡Ticket creado exitosamente!");
+                window.location.href = "tickets.html";
+            } catch (error) {
+                alert("Error al crear ticket: " + error.message);
+            }
+        });
+    }
+
+    const ticketList = document.getElementById("ticketList");
+    if (ticketList) {
         onSnapshot(collection(db, "tickets"), (snapshot) => {
-            const ticketList = document.getElementById("ticketList");
             ticketList.innerHTML = "";
+            if (snapshot.empty) {
+                ticketList.innerHTML = "<tr><td colspan='4' class='text-center'>No hay tickets disponibles</td></tr>";
+                return;
+            }
             snapshot.forEach((doc) => {
                 const ticket = doc.data();
                 ticketList.innerHTML += `
@@ -112,13 +159,3 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
-
-// Actualizar estado del ticket
-window.actualizarEstado = async (id, estado) => {
-    await updateDoc(doc(db, "tickets", id), { estado });
-};
-
-// Eliminar ticket
-window.eliminarTicket = async (id) => {
-    await deleteDoc(doc(db, "tickets", id));
-};
