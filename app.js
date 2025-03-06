@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnGoogle = document.getElementById("btnGoogle");
     const btnLogout = document.getElementById("btnLogout");
     const btnCrearTicket = document.getElementById("btnCrearTicket");
+    const btnNuevoTicket = document.getElementById("btnNuevoTicket");
 
     if (btnLogin) {
         btnLogin.addEventListener("click", async () => {
@@ -101,11 +102,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (btnCrearTicket) {
+        btnCrearTicket.addEventListener("click", () => {
+            window.location.href = "crear-ticket.html";
+        });
+    }
+
+    if (btnNuevoTicket) {
+        btnNuevoTicket.addEventListener("click", () => {
+            window.location.href = "crear-ticket.html";
+        });
+    }
+    
+    if (btnCrearTicket) {
         btnCrearTicket.addEventListener("click", async () => {
             const titulo = document.getElementById("titulo").value.trim();
             const descripcion = document.getElementById("descripcion").value.trim();
             const prioridad = document.getElementById("prioridad").value;
             const user = auth.currentUser;
+
+            console.log("Intentando crear ticket con datos:", { titulo, descripcion, prioridad, user });
 
             if (!user) {
                 alert("Debes iniciar sesión para crear un ticket.");
@@ -126,9 +141,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     usuario: user.uid,
                     fechaCreacion: serverTimestamp()
                 });
+
                 alert("¡Ticket creado exitosamente!");
                 window.location.href = "tickets.html";
             } catch (error) {
+                console.error("Error al guardar en Firestore:", error);
                 alert("Error al crear ticket: " + error.message);
             }
         });
