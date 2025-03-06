@@ -34,6 +34,7 @@
             const btnLogout = document.getElementById("btnLogout");
             const btnViewTickets = document.getElementById("btnViewTickets");
             const btnCreateTicket = document.getElementById("btnCreateTicket");
+            const btnProfile = document.getElementById("btnProfile");
 
             onAuthStateChanged(auth, (user) => {
                 if (!user) {
@@ -54,7 +55,6 @@
             openTickets.textContent = abiertos;
             closedTickets.textContent = cerrados;
 
-            // Evento para cerrar sesión
             if (btnLogout) {
                 btnLogout.addEventListener("click", async () => {
                     try {
@@ -66,17 +66,21 @@
                 });
             }
 
-            // Navegación a lista de tickets
             if (btnViewTickets) {
                 btnViewTickets.addEventListener("click", () => {
                     window.location.href = "tickets.html";
                 });
             }
 
-            // Navegación a creación de nuevo ticket
             if (btnCreateTicket) {
                 btnCreateTicket.addEventListener("click", () => {
                     window.location.href = "crear-ticket.html";
+                });
+            }
+
+            if (btnProfile) {
+                btnProfile.addEventListener("click", () => {
+                    window.location.href = "perfil.html";
                 });
             }
         });
@@ -128,6 +132,23 @@
         .create-button { background-color: #17a2b8; }
         .logout-button { background-color: #dc3545; }
         .button:hover { opacity: 0.8; }
+        .floating-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
@@ -144,5 +165,6 @@
             <button id="btnLogout" class="button logout-button">Cerrar Sesión</button>
         </div>
     </div>
+    <button id="btnProfile" class="floating-button">👤</button>
 </body>
 </html>

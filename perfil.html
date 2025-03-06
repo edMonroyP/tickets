@@ -1,25 +1,154 @@
-<!-- perfil.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil de Usuario</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="styles.css">
+    <script type="module">
+        // Importar Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut, updateProfile } 
+        from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBmVlFuDlyJy484MOVNdClEsXhDzx9EMU8",
+            authDomain: "tickets-79166.firebaseapp.com",
+            projectId: "tickets-79166",
+            storageBucket: "tickets-79166.firebasestorage.app",
+            messagingSenderId: "559863475280",
+            appId: "1:559863475280:web:800b1680ae11d9434fb555",
+            measurementId: "G-D677EPJJ6H"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth();
+
+        function showToast(message, type) {
+            const toast = document.createElement("div");
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<strong>${type === 'success' ? '✅ Éxito:' : '❌ Error:'}</strong> ${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = "0";
+                setTimeout(() => toast.remove(), 500);
+            }, 4000);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const userName = document.getElementById("userName");
+            const userEmail = document.getElementById("userEmail");
+            const userPhoto = document.getElementById("userPhoto");
+            const nameInput = document.getElementById("nameInput");
+            const btnSave = document.getElementById("btnSave");
+            const btnLogout = document.getElementById("btnLogout");
+
+            onAuthStateChanged(auth, (user) => {
+                if (!user) {
+                    window.location.href = "index.html";
+                    return;
+                }
+                if (userName && userEmail && userPhoto && nameInput) {
+                    userName.textContent = user.displayName || "Usuario";
+                    userEmail.textContent = user.email;
+                    userPhoto.src = user.photoURL || "https://via.placeholder.com/100";
+                    nameInput.value = user.displayName || "";
+                }
+            });
+
+            if (btnSave) {
+                btnSave.addEventListener("click", async () => {
+                    const newName = nameInput.value.trim();
+                    if (newName) {
+                        try {
+                            await updateProfile(auth.currentUser, { displayName: newName });
+                            if (userName) userName.textContent = newName;
+                            showToast("Nombre actualizado", "success");
+                        } catch (error) {
+                            showToast(error.message, "error");
+                        }
+                    }
+                });
+            }
+
+            if (btnLogout) {
+                btnLogout.addEventListener("click", async () => {
+                    await signOut(auth);
+                    showToast("Sesión cerrada correctamente", "success");
+                    window.location.href = "index.html";
+                });
+            }
+        });
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 15px;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .save-button { background-color: #007BFF; }
+        .logout-button { background-color: #dc3545; }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+        .success { background: #28a745; }
+        .error { background: #dc3545; }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
+    <div class="container">
         <h2>Perfil de Usuario</h2>
-        <div class="card p-3">
-            <img id="fotoPerfil" class="rounded-circle mx-auto d-block" width="100" height="100">
-            <h4 id="nombreUsuario" class="text-center mt-3"></h4>
-            <p id="emailUsuario" class="text-center"></p>
-        </div>
-        
-        <button id="btnCerrarSesion" class="btn btn-danger w-100 mt-3">Cerrar Sesión</button>
+        <img id="userPhoto" src="" alt="Foto de Perfil">
+        <p><strong>Nombre:</strong> <span id="userName"></span></p>
+        <p><strong>Email:</strong> <span id="userEmail"></span></p>
+        <input type="text" id="nameInput" placeholder="Editar nombre">
+        <button id="btnSave" class="save-button">Guardar Cambios</button>
+        <button id="btnLogout" class="logout-button">Cerrar Sesión</button>
     </div>
-    
-    <script src="app.js" type="module"></script>
 </body>
 </html>
